@@ -14,7 +14,7 @@ using WeifenLuo.WinFormsUI.Docking;
 using SPCoder.Properties;
 using SPCoder.Core.Utils.Nodes;
 using System.Diagnostics;
-
+using SPCoder.SharePoint.Client.Utils;
 
 namespace SPCoder.Windows
 {
@@ -59,8 +59,8 @@ namespace SPCoder.Windows
                 //SPCoderForm.MainForm.Modules.Add(new FBModule());
                 //SPCoderForm.MainForm.Modules.Add(new GithubModule());
                 //SPCoderForm.MainForm.Modules.Add(new FSModule());
-                //SPCoderForm.MainForm.Modules.Add(new WebModule());                
-                //SPCoderForm.MainForm.Modules.Add(new SharePointClientModule());                               
+                //SPCoderForm.MainForm.Modules.Add(new WebModule());
+                SPCoderForm.MainForm.Modules.Add(new SharePointClientModule());
             }
             
             foreach (ModuleDescription module in SPCoderForm.MainForm.Modules)
