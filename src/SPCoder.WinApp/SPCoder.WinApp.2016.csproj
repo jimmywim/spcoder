@@ -303,10 +303,15 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <None Include="Scripts\CSharp\Plugins\SPGetListPropertyBag.csx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Scripts\CSharp\Plugins\SPSharePointFileEditor.csx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Scripts\CSharp\Plugins\SPGetWebPropertyBag.csx" />
+    <None Include="Scripts\CSharp\Plugins\SPGetWebPropertyBag.csx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Compile Include="Utils\CryptoHelper.cs" />
     <Compile Include="Utils\ISPCoderForm.cs" />
     <Compile Include="Utils\SPCoderSettings.cs" />
