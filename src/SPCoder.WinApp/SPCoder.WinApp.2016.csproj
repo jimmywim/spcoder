@@ -306,6 +306,7 @@
     <None Include="Scripts\CSharp\Plugins\SPSharePointFileEditor.csx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Scripts\CSharp\Plugins\SPGetWebPropertyBag.csx" />
     <Compile Include="Utils\CryptoHelper.cs" />
     <Compile Include="Utils\ISPCoderForm.cs" />
     <Compile Include="Utils\SPCoderSettings.cs" />
