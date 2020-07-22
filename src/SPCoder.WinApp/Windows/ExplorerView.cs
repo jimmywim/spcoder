@@ -774,5 +774,26 @@ namespace SPCoder.Windows
             }
         }
 
+        private void tvSp_DragDrop(object sender, DragEventArgs e)
+        {
+            SPCoderForm.MainForm.AppendToLog($"Dragged item: {SPCoderForm.MainForm.DragedBaseNode}");
+        }
+
+        private void tvSp_DragEnter(object sender, DragEventArgs e)
+        {
+            try
+            {
+                Point targetPoint = tvSp.PointToClient(new Point(e.X, e.Y));
+                TreeNodeAdv targetNode = tvSp.GetNodeAt(targetPoint);
+                BaseNode hoveredNode = ((Node)targetNode.Tag).Tag as BaseNode;
+
+                if (hoveredNode.CanAcceptDragSource(SPCoderForm.MainForm.DragedBaseNode))
+                {
+                    e.Effect = DragDropEffects.Copy;
+                }
+            }
+            catch
+            { }
+        }
     }
 }

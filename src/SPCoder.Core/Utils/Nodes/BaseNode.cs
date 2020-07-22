@@ -83,5 +83,10 @@ namespace SPCoder.Utils.Nodes
 
         public virtual void Clean()
         { }
+
+        public virtual bool CanAcceptDragSource(BaseNode draggedItem)
+        {
+            return false;
+        }
     }
 }

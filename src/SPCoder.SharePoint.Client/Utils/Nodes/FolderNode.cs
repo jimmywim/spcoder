@@ -126,5 +126,15 @@ namespace SPCoder.Utils.Nodes
 
             return actions;
         }
+
+        public override bool CanAcceptDragSource(BaseNode draggedItem)
+        {
+            if (draggedItem is FileNode)
+            {
+                return true;
+            }
+
+            return false;
+        }
     }
 }

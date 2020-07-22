@@ -77,6 +77,8 @@
             this.tvSp.NodeMouseDoubleClick += new System.EventHandler<Aga.Controls.Tree.TreeNodeAdvMouseEventArgs>(this.tvSp_NodeMouseDoubleClick);
             this.tvSp.Expanding += new System.EventHandler<Aga.Controls.Tree.TreeViewAdvEventArgs>(this.tvSp_Expanding);
             this.tvSp.Expanded += new System.EventHandler<Aga.Controls.Tree.TreeViewAdvEventArgs>(this.tvSp_Expanded);
+            this.tvSp.DragDrop += new System.Windows.Forms.DragEventHandler(this.tvSp_DragDrop);
+            this.tvSp.DragEnter += new System.Windows.Forms.DragEventHandler(this.tvSp_DragEnter);
             this.tvSp.MouseUp += new System.Windows.Forms.MouseEventHandler(this.tvSp_MouseUp);
             // 
             // _nodeStateIcon
