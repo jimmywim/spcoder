@@ -1,4 +1,6 @@
-﻿using SPCoder.Context;
+﻿using CsvHelper;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using SPCoder.Context;
 using SPCoder.Core.Utils;
 using SPCoder.Utils;
 using System;
@@ -6,6 +8,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Runtime.Remoting.Messaging;
 using System.Text;
@@ -89,7 +93,9 @@ namespace SPCoder.Windows
                 grid.DataSource = source;
 
                 //grid.DataSource = this.GridSource;
-                
+
+                this.btnExport.Enabled = true;
+
 
             }
             catch (Exception exc)
@@ -101,8 +107,62 @@ namespace SPCoder.Windows
             }
         }
 
+        private void ExportToCsv()
+        {
+            if (this.grid.DataSource == null)
+            {
+                return;
+            }
+
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "CSV (*.csv)|*.csv";
+            if (saveFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    var csvByteArray = this.ConvertDataToCsv();
+                    File.WriteAllBytes(saveFileDialog.FileName, csvByteArray);
+
+                    SPCoderForm.MainForm.AppendToLog($"Exported to CSV: {saveFileDialog.FileName}");
+                }
+                catch (Exception ex)
+                {
+                    SPCoderLogging.Logger.Error($"Failed to save file: {ex.Message}");
+                }
+            }
+        }
+
+        private byte[] ConvertDataToCsv()
+        {
+            using (var csvStream = new MemoryStream())
+            using (var writer = new StreamWriter(csvStream))
+            using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+            {
+                foreach (DataGridViewColumn col in this.grid.Columns)
+                {
+                    csv.WriteField(col.Name);
+                }
+
+                csv.NextRecord();
+
+                foreach (DataGridViewRow row in this.grid.Rows)
+                {
+                    for (var i = 0; i < this.grid.Columns.Count; i++)
+                    {
+                        csv.WriteField(row.Cells[i].Value);
+                    }
+
+                    csv.NextRecord();
+                }
+
+                writer.Flush();
+
+                return csvStream.ToArray();
+            }
+        }
+
         private void btnView_Click(object sender, EventArgs e)
-        {            
+        {
             showDataInGrid();
             SetExpression(txtCode.Text);
         }
@@ -154,6 +214,11 @@ namespace SPCoder.Windows
                 btnView_Click(sender, e);
                 e.Handled = true;
             }
+        }
+
+        private void btnExport_Click(object sender, EventArgs e)
+        {
+            this.ExportToCsv();
         }
     }
 }
