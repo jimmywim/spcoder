@@ -452,6 +452,9 @@
     <None Include="Scripts\CSharp\Plugins\SPSharePointListItemsGetter.csx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Scripts\CSharp\Plugins\SPSharePointListPnpTemplateGetter.csx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Scripts\CSharp\Plugins\SPSharePointWebPnpTemplateGetter.csx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -520,6 +523,7 @@
     <Content Include="Images\ClosedFolder.ICO" />
     <Content Include="Images\CSFile.ico" />
     <Content Include="Images\CSProject.ico" />
+    <Content Include="Images\DETAIL.GIF" />
     <Content Include="Images\File.ico" />
     <Content Include="Images\Form.ico" />
     <Content Include="Images\ITCONTCT.GIF" />
