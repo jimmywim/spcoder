@@ -68,7 +68,7 @@ namespace SPCoder.Utils
 
                     BaseNode thisWeb = DoSPWeb((Web)node.SPObject, node.ParentNode, node.RootNode);
 
-                    foreach(var webChild in thisWeb.Children)
+                    foreach (var webChild in thisWeb.Children)
                     {
                         node.Children.Add(webChild);
                     }
@@ -136,7 +136,7 @@ namespace SPCoder.Utils
             if (node is AssociatedSitesNode)
             {
                 //if (!doIfLoaded)
-                if(true)
+                if (true)
                 {
                     if (node.ParentNode.Children != null && node.ParentNode.Children.Contains(node))
                     {
@@ -235,7 +235,7 @@ namespace SPCoder.Utils
                 rootNode.SPObject = tenant;
                 DoTenant(tenant, rootNode, rootNode);
 
-               
+
                 return rootNode;
             }
             else
@@ -280,7 +280,7 @@ namespace SPCoder.Utils
                 try
                 {
                     foreach (var subfolder in folder.Folders.OrderBy(f => f.Name))
-                    {         
+                    {
                         BaseNode childNode = new FolderNode(subfolder);
                         myNode.Children.Add(childNode);
 
@@ -336,10 +336,10 @@ namespace SPCoder.Utils
         }
 
         private BaseNode DoSPList(Microsoft.SharePoint.Client.List list, BaseNode parentNode, BaseNode rootNode)
-        {         
+        {
             list.EnsureProperties(l => l.RootFolder, l => l.BaseType, l => l.ContentTypes);
 
-            ListNode listNode = parentNode as ListNode;            
+            ListNode listNode = parentNode as ListNode;
 
             // Add Content Type Container node
             BaseNode listContentTypeContainerNode = new ContentTypeContainerNode(list.ContentTypes);
@@ -378,7 +378,7 @@ namespace SPCoder.Utils
                 myNode.RootNode = rootNode;
                 myNode.NodeConnector = this;
                 myNode.LoadedData = true;
-                                
+
                 try
                 {
                     foreach (Web childWeb in web.Webs)
@@ -426,7 +426,7 @@ namespace SPCoder.Utils
         {
             try
             {
-                foreach(var contentType in contentTypes.OrderBy(c => c.Name))
+                foreach (var contentType in contentTypes.OrderBy(c => c.Name))
                 {
                     ContentTypeNode contentTypeNode = new ContentTypeNode(contentType);
 
@@ -436,9 +436,9 @@ namespace SPCoder.Utils
                     contentTypeNode.NodeConnector = this;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-               // log
+                // log
             }
         }
 
@@ -453,7 +453,7 @@ namespace SPCoder.Utils
                 context.ExecuteQuery();
 
                 // Add hubs first
-                foreach(var hub in hubs)
+                foreach (var hub in hubs)
                 {
                     var websContext = AuthUtil.GetContext(this.AuthenticationType, hub.SiteUrl, this.Username, this.Password);
 
@@ -505,11 +505,11 @@ namespace SPCoder.Utils
                     var websContext = AuthUtil.GetContext(this.AuthenticationType, site.Url, this.Username, this.Password);
                     // Leaving this commented out for now, slows the load down massively
                     //websContext.Web.EnsureProperties(w => w.Title, w => w.Url);
-                    
+
                     // By using a Scoped Web, we can let the iteration continue as normal and rendering can be quick
                     // Because otherwise we need to use Tenant.GetSiteByUrl() and request that each time
                     // Which makes rendering the contents of the tenant VERY slow.
-                    
+
                     var webNode = new ScopedWebNode(websContext);
                     webNode.Title = site.Title;
                     webNode.Url = site.Url;
@@ -526,7 +526,7 @@ namespace SPCoder.Utils
                     tenantNode.Children.Add(webNode);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 SPCoderLogging.Logger.Error($"Failed to fetch site: {ex.Message}");
             }
@@ -539,6 +539,12 @@ namespace SPCoder.Utils
                 // Associated Sites have already been loaded as part of the Tenant load. Pull them in from there
                 associatedSites.Children.Clear();
 
+                // Use the Parent Web Node of this Associated Sites Node for the context
+                // The reason being is that the Context of Associated Sites node, and that of Tenant
+                // is the Admin Centre's URL.
+                // We'll be using Search to get the associated sites, and this must run form a Content Site's Context
+                // as the the Admin Centre URL's search endpoint doesn't yield any results
+
                 var clientObj = associatedSites.ParentNode.SPObject as ClientObject;
                 var context = clientObj.Context as ClientContext;
                 var associatedSiteUrls = WebUtils.GetAssociatedSiteUrlsForHub(context, hubSite.ID);
@@ -546,22 +552,22 @@ namespace SPCoder.Utils
                 if (rootNode is TenantNode)
                 {
                     var tenant = rootNode as TenantNode;
-                    foreach(var site in tenant.Children)
+                    foreach (var site in tenant.Children)
                     {
                         if (site is HubSiteNode) continue; // Don't duplicate the hub site as an associated site
 
                         WebNode thisWebNode = site as WebNode;
 
-                        if(associatedSiteUrls.Any(u => u.ToLower() == thisWebNode.AbsoluteUrl.ToLower()))
+                        if (associatedSiteUrls.Any(u => u.ToLower() == thisWebNode.AbsoluteUrl.ToLower()))
                         {
                             associatedSites.Children.Add(site);
                         }
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-
+                SPCoderLogging.Logger.Error($"Failed to get associated sites: {ex}");
             }
         }
 
