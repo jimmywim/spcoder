@@ -21,6 +21,8 @@ namespace SPCoder.Utils
 {
     public class CSOMConnector : BaseConnector
     {
+        private List<object> contextObjects = new List<object>();
+
         public ClientContext Context { get; set; }
         public CSOMConnector() : base()
         { }
@@ -525,6 +527,9 @@ namespace SPCoder.Utils
 
                     tenantNode.Children.Add(webNode);
                 }
+
+                // Add to context, to allow simpler enumeration of sites & their contexts within scripts
+                this.contextObjects.Add(tenantNode);
             }
             catch (Exception ex)
             {
@@ -597,6 +602,7 @@ namespace SPCoder.Utils
             objects.Add(this.Context);
             objects.Add(this.Context.Web);
             objects.Add(this.Context.Site);
+            objects.AddRange(this.contextObjects);
             return objects;
         }
     }
