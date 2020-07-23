@@ -550,8 +550,8 @@ namespace SPCoder.Utils
                 // We'll be using Search to get the associated sites, and this must run form a Content Site's Context
                 // as the the Admin Centre URL's search endpoint doesn't yield any results
 
-                var clientObj = associatedSites.ParentNode.SPObject as ClientObject;
-                var context = clientObj.Context as ClientContext;
+                var hubWeb = associatedSites.ParentNode.SPObject as Web;
+                var context = hubWeb.Context as ClientContext;
                 var associatedSiteUrls = WebUtils.GetAssociatedSiteUrlsForHub(context, hubSite.ID);
 
                 if (rootNode is TenantNode)
@@ -563,7 +563,8 @@ namespace SPCoder.Utils
 
                         WebNode thisWebNode = site as WebNode;
 
-                        if (associatedSiteUrls.Any(u => u.ToLower() == thisWebNode.AbsoluteUrl.ToLower()))
+                        if (associatedSiteUrls.Any(u => u.ToLower() == thisWebNode.AbsoluteUrl.ToLower()) &&
+                            hubWeb.ServerRelativeUrl != thisWebNode.Url)
                         {
                             associatedSites.Children.Add(site);
                         }
