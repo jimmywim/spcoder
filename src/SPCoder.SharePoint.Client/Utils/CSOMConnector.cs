@@ -140,10 +140,10 @@ namespace SPCoder.Utils
                 //if (!doIfLoaded)
                 if (true)
                 {
-                    if (node.ParentNode.Children != null && node.ParentNode.Children.Contains(node))
-                    {
-                        node.ParentNode.Children.Remove(node);
-                    }
+                    //if (node.ParentNode.Children != null && node.ParentNode.Children.Contains(node))
+                    //{
+                    //    node.ParentNode.Children.Remove(node);
+                    //}
 
                     DoAssociatedSites((HubSiteProperties)node.SPObject, (AssociatedSitesNode)node, node.RootNode);
                 }
