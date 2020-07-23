@@ -602,6 +602,7 @@ namespace SPCoder.Utils
             objects.Add(this.Context);
             objects.Add(this.Context.Web);
             objects.Add(this.Context.Site);
+
             objects.AddRange(this.contextObjects);
             return objects;
         }
