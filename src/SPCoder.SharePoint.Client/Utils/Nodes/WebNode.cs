@@ -15,6 +15,8 @@ namespace SPCoder.Utils.Nodes
     public class WebNode : BaseNode
     {
         public string AbsoluteUrl { get; set; }
+        public Guid HubSiteId { get; set; }
+        public Guid SiteCollectionId { get; set; }
 
         public WebNode()
         {
@@ -35,6 +37,11 @@ namespace SPCoder.Utils.Nodes
 
             this.AbsoluteUrl = WebUtils.MakeAbsoluteUrl(web, base.Url);
             this.realObject = web;
+        }
+
+        public WebNode(Web web, Guid siteId): this(web)
+        {
+            this.SiteCollectionId = siteId;
         }
 
         public override object GetRealSPObject()

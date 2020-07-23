@@ -18,7 +18,8 @@ namespace SPCoder.Utils.Nodes
         public ScopedWebNode(ClientContext ctx)
         {
             this.ctx = ctx;
-
+            this.AbsoluteUrl = ctx.Url;
+            
             base.SPObjectType = ctx.Web.GetType().Name;
         }
 

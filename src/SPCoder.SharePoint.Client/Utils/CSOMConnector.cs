@@ -60,6 +60,25 @@ namespace SPCoder.Utils
                 }
             }
 
+            if (node is HubSiteNode)
+            {
+                if (!doIfLoaded)
+                {
+                    node.Children.Clear();
+
+                    BaseNode thisWeb = DoSPWeb((Web)node.SPObject, node.ParentNode, node.RootNode);
+
+                    foreach(var webChild in thisWeb.Children)
+                    {
+                        node.Children.Add(webChild);
+                    }
+
+                    ((HubSiteNode)node).InitAssociatedHubSitesNode();
+                }
+
+                return node;
+            }
+
             //If it is a web node
             if (node is WebNode || node is ScopedWebNode)
             {
@@ -111,6 +130,20 @@ namespace SPCoder.Utils
                     }
 
                     DoContentTypes((ContentTypeCollection)node.SPObject, node, node.RootNode);
+                }
+            }
+
+            if (node is AssociatedSitesNode)
+            {
+                //if (!doIfLoaded)
+                if(true)
+                {
+                    if (node.ParentNode.Children != null && node.ParentNode.Children.Contains(node))
+                    {
+                        node.ParentNode.Children.Remove(node);
+                    }
+
+                    DoAssociatedSites((HubSiteProperties)node.SPObject, (AssociatedSitesNode)node, node.RootNode);
                 }
             }
 
@@ -331,23 +364,28 @@ namespace SPCoder.Utils
             BaseNode myNode = null;
             try
             {
-                myNode = new WebNode(web);
+                var ctx = web.Context as ClientContext;
+
+                ctx.Load(web.Webs);
+                ctx.Load(web.Lists);
+                ctx.Load(ctx.Site, s => s.Id);
+                ctx.ExecuteQuery();
+
+                myNode = new WebNode(web, ctx.Site.Id);
                 parentNode.Children.Add(myNode);
+
                 myNode.ParentNode = parentNode;
                 myNode.RootNode = rootNode;
                 myNode.NodeConnector = this;
                 myNode.LoadedData = true;
-                web.Context.Load(web.Webs);
-                web.Context.Load(web.Lists);
-
-                web.Context.ExecuteQuery();
+                                
                 try
                 {
                     foreach (Web childWeb in web.Webs)
                     {
                         //doSPWeb(childWeb, myNode, rootNode);
                         //Draw the nodes - user will expand them later if necessary
-                        BaseNode childNode = new WebNode(childWeb);
+                        BaseNode childNode = new WebNode(childWeb, ctx.Site.Id);
                         myNode.Children.Add(childNode);
                         childNode.ParentNode = parentNode;
                         childNode.RootNode = rootNode;
@@ -409,12 +447,61 @@ namespace SPCoder.Utils
             try
             {
                 var context = tenant.Context as ClientContext;
-                var siteProps = tenant.GetSiteProperties(0, true);
-                context.Load(siteProps);
+                var hubs = tenant.GetHubSitesProperties();
+
+                context.Load(hubs);
                 context.ExecuteQuery();
 
-                foreach(var site in siteProps)
+                // Add hubs first
+                foreach(var hub in hubs)
                 {
+                    var websContext = AuthUtil.GetContext(this.AuthenticationType, hub.SiteUrl, this.Username, this.Password);
+
+                    var hubSiteNode = new HubSiteNode(websContext, hub);
+                    hubSiteNode.Title = hub.Title;
+                    hubSiteNode.Url = hub.SiteUrl;
+                    hubSiteNode.ParentNode = tenantNode;
+                    hubSiteNode.RootNode = rootNode;
+                    hubSiteNode.NodeConnector = this;
+
+                    if (string.IsNullOrWhiteSpace(hubSiteNode.Title))
+                    {
+                        hubSiteNode.Title = hubSiteNode.Url;
+                    }
+
+                    hubSiteNode.Title += " (Hub)";
+
+                    tenantNode.Children.Add(hubSiteNode);
+                }
+
+
+                // Use this method of a filter to call GetSiteProperties, because otherwise it misses out
+                // Lots of site types, like associated hub sites
+                SPOSitePropertiesEnumerableFilter filter = new SPOSitePropertiesEnumerableFilter()
+                {
+                    IncludeDetail = true
+                };
+
+                SPOSitePropertiesEnumerable sitesList = null;
+                var sites = new List<SiteProperties>();
+                do
+                {
+                    sitesList = tenant.GetSitePropertiesFromSharePointByFilters(filter);
+                    context.Load(sitesList);
+                    context.ExecuteQueryRetry();
+                    sites.AddRange(sitesList.ToList());
+                    filter.StartIndex = sitesList.NextStartIndexFromSharePoint;
+                } while (!string.IsNullOrWhiteSpace(sitesList.NextStartIndexFromSharePoint));
+
+
+                foreach (var site in sites)
+                {
+                    if (hubs.Any(h => h.SiteUrl == site.Url))
+                    {
+                        // Don't duplicate a hub site in the list of sites
+                        continue;
+                    }
+
                     var websContext = AuthUtil.GetContext(this.AuthenticationType, site.Url, this.Username, this.Password);
                     // Leaving this commented out for now, slows the load down massively
                     //websContext.Web.EnsureProperties(w => w.Title, w => w.Url);
@@ -423,12 +510,13 @@ namespace SPCoder.Utils
                     // Because otherwise we need to use Tenant.GetSiteByUrl() and request that each time
                     // Which makes rendering the contents of the tenant VERY slow.
                     
-                    BaseNode webNode = new ScopedWebNode(websContext);
+                    var webNode = new ScopedWebNode(websContext);
                     webNode.Title = site.Title;
                     webNode.Url = site.Url;
                     webNode.ParentNode = tenantNode;
                     webNode.RootNode = rootNode;
                     webNode.NodeConnector = this;
+                    webNode.HubSiteId = site.HubSiteId;
 
                     if (string.IsNullOrWhiteSpace(webNode.Title))
                     {
@@ -441,6 +529,39 @@ namespace SPCoder.Utils
             catch(Exception ex)
             {
                 SPCoderLogging.Logger.Error($"Failed to fetch site: {ex.Message}");
+            }
+        }
+
+        private void DoAssociatedSites(HubSiteProperties hubSite, AssociatedSitesNode associatedSites, BaseNode rootNode)
+        {
+            try
+            {
+                // Associated Sites have already been loaded as part of the Tenant load. Pull them in from there
+                associatedSites.Children.Clear();
+
+                var clientObj = associatedSites.ParentNode.SPObject as ClientObject;
+                var context = clientObj.Context as ClientContext;
+                var associatedSiteUrls = WebUtils.GetAssociatedSiteUrlsForHub(context, hubSite.ID);
+
+                if (rootNode is TenantNode)
+                {
+                    var tenant = rootNode as TenantNode;
+                    foreach(var site in tenant.Children)
+                    {
+                        if (site is HubSiteNode) continue; // Don't duplicate the hub site as an associated site
+
+                        WebNode thisWebNode = site as WebNode;
+
+                        if(associatedSiteUrls.Any(u => u.ToLower() == thisWebNode.AbsoluteUrl.ToLower()))
+                        {
+                            associatedSites.Children.Add(site);
+                        }
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+
             }
         }
 

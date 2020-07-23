@@ -1,4 +1,5 @@
 ﻿using Microsoft.SharePoint.Client;
+using Microsoft.SharePoint.Client.Search.Query;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +23,31 @@ namespace SPCoder.SharePoint.Client.Utils
             string tenantStub = $"{webUri.Scheme}://{webUri.Authority}";
 
             return $"{tenantStub}{serverRelativeUrl}";
+        }
+
+        public static List<string> GetAssociatedSiteUrlsForHub(ClientContext ctx, Guid hubSiteId)
+        {
+            List<string> urls = new List<string>();
+
+            KeywordQuery keywordQuery = new KeywordQuery(ctx);
+            keywordQuery.QueryText = $"contentclass=sts_site  DepartmentId:{{{hubSiteId}}}";
+            keywordQuery.SelectProperties.Add("Path");
+            keywordQuery.SourceId = new Guid("8413cd39-2156-4e00-b54d-11efd9abdb89"); // Local SharePoint Results
+            
+            SearchExecutor searchExecutor = new SearchExecutor(ctx);
+            ClientResult<ResultTableCollection> results = searchExecutor.ExecuteQuery(keywordQuery);
+            ctx.ExecuteQuery();
+
+            foreach (var resultTable in results.Value)
+            {
+                foreach (var resultRow in resultTable.ResultRows)
+                {
+                    var url = resultRow["Path"] as string;
+                    urls.Add(url);
+                }
+            }
+
+            return urls;
         }
     }
 }
