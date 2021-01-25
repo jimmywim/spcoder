@@ -33,6 +33,7 @@ namespace SPCoder.SharePoint.Client.Utils
             keywordQuery.QueryText = $"contentclass=sts_site  DepartmentId:{{{hubSiteId}}}";
             keywordQuery.SelectProperties.Add("Path");
             keywordQuery.SourceId = new Guid("8413cd39-2156-4e00-b54d-11efd9abdb89"); // Local SharePoint Results
+            keywordQuery.TrimDuplicates = false;
             
             SearchExecutor searchExecutor = new SearchExecutor(ctx);
             ClientResult<ResultTableCollection> results = searchExecutor.ExecuteQuery(keywordQuery);
